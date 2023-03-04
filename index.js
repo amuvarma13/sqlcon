@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 const mysql = require("promise-mysql");
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
 // app.get("/", (req,res)=>{
 //     res.send("sarahs pussy")
@@ -9,26 +11,37 @@ const mysql = require("promise-mysql");
 app.get("/test", (req,res)=>{
     res.send("test")
 })
-app.get("/", async (req,res)=>{
-    console.log("attempting home route")
+app.post("/mysql/verify", async (req,res)=>{
+    const body = req.body;
+    const {host, user, password, database} = body;
     try{
-        const sql = await mysql.createConnection({
-            host: '34.29.208.124',
-            user     : 'amu',
-            password : 'Amartya0',
-            database : 'quickstart_db'
-        })
-        res.send("connected")
+        const sql = await mysql.createConnection({host,user,password,database })
+        res.send({success:true})
 
     } catch(err){
-        console.log("*********");
-        console.log(err)
-        res.send("there was an error")
+        res.send({success:false})
 
     }
 
+})
+app.post("/mysql/query", async (req,res)=>{
+    const body = req.body;
+    const {host, user, password, database, query} = body;
+    try{
+        const connection = await mysql.createConnection({host,user,password,database })
+        const sql_data = await connection.query(query)
 
+        res.send({success:true, data:sql_data})
 
+    } catch(err){
+        console.log(err)
+        res.send({success:false})
+
+    }
+
+})
+app.get("/", async (req,res)=>{
+    res.send("retorch sql api")
 })
 
 const PORT = process.env.PORT || 3000;
